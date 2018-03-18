@@ -8,7 +8,7 @@
 int **matrix;							//Declaration of structure of Sudoku
 int edge;								
 
-int c;
+//int c;
 
 void readFile();
 void placeFindingRow();
@@ -19,7 +19,9 @@ void printMatrix();
 int main(int argc, char *argv[])
 {
 	readFile(argv[1]);
-	//placeFindingRow();
+	placeFindingRow();
+	placeFindingColumn();
+	placeFindingRow();
 	placeFindingColumn();
 	printMatrix();
 	return 0;
