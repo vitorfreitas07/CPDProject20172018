@@ -6,8 +6,7 @@
 //Global Variables
 
 int **matrix;							//Declaration of structure of Sudoku
-#define EDGEE 4
-int edge = 1;								
+int edge;								
 
 int c;
 
@@ -63,20 +62,7 @@ void readFile(char file[]){
 			matrix[i][j]=value;
 			j++;
 		}
-    } 
-	
-/*
-	for(i = 0; i<edge; i++ )
-	{
-		for(j = 0; j < edge; j++)
-		{
-			printf("%d ",matrix[i][j]);
-		}
-		printf("\n");
-	}
-*/	
-	
-	 
+    }	 
 }
 
 
