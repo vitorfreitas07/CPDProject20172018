@@ -6,22 +6,26 @@
 //Global Variables
 
 int **matrix;							//Declaration of structure of Sudoku
-int edge;								
+int edge;	
+int l;							
 
 
 void readFile();
 void placeFindingRow();
 void placeFindingColumn();
 void printMatrix();
+void placeFindingSquareHorizontal();
 
 // Main function
 int main(int argc, char *argv[])
 {
 	readFile(argv[1]);
+	/*
 	placeFindingRow();
 	placeFindingColumn();
 	placeFindingRow();
-	placeFindingColumn();
+	placeFindingColumn();*/
+	placeFindingSquareHorizontal();
 	printMatrix();
 	return 0;
 }
@@ -38,6 +42,7 @@ void readFile(char file[]){
     } 
  
 	fscanf(input, "%d", &value );
+	l = value;
 	edge=value*value;
 	
 	//Allocation of structure for Sudoku
@@ -150,6 +155,69 @@ void placeFindingColumn()
 		for(int i=0; i < edge;i++)
 		{
 			colValues[i]= 0;
+		}
+	}
+}
+
+void placeFindingSquareHorizontal() //vê se falta um elemento num quadrado e põe se faltar
+{
+	/*int **squareValues = (int **) malloc(l*sizeof(int *));
+	for(int i=0;i<l;i++)
+	{
+		squareValues[i]=(int *) malloc(l*sizeof(int));
+	}*/
+	int *squareValues = malloc(edge*sizeof(int)); //vetor com os numeros presentes no quadrado
+	int rowToChange;     //indice da linha onde vai ser inserido o numero (dentro do quadrado)
+	int colToChange;     //indice da coluna onde vai ser inserido o numero (dentro do quadrado)
+	int valueToInsert;	 //valor para ser inserido na posiçao matrix[rowToChange][j]
+	int counter = 0;	 //counter para contar quantos numeros estao inseridos na coluna
+	
+	for(int i = 0; i < l; i++)
+	{
+		for(int j = 0; j < l; j++)
+		{			
+			for(int k = 0; k < l; k++)
+			{
+				for(int t = 0; t < l; t++)
+				{
+					if(matrix[i*l+k][j*l+t]!=0)
+					{
+						counter++;
+						//printf("Adicionei o %d Counter: %d\n", matrix[i*l+k][j*l+t], counter);
+						
+						squareValues[matrix[i*l+k][j*l+t] - 1] = matrix[i*l+k][j*l+t]; //talvez n seja preciso usar um vetor auxiliar..
+					}
+					else
+					{
+						rowToChange = k;
+						colToChange = t;
+					}
+				}
+			}
+			
+			if(counter == edge-1)
+			{
+				//printf("Counter deu 3! %d\n", counter);
+				for(int k = 0; k < edge; k++)
+				{
+					
+					if(squareValues[k] == 0)
+					{
+						//printf("Valor a ser inserido: %d\n", k + 1);
+						valueToInsert = k + 1;
+					}					
+				}
+				
+				matrix[i*l + rowToChange][j*l + colToChange] = valueToInsert;
+			}
+			
+			//reset counter and squareValues
+			counter = 0;
+			//printf("Resetei\n");
+			for(int i=0; i < edge;i++)
+			{
+				squareValues[i] = 0;
+			}
 		}
 	}
 }
