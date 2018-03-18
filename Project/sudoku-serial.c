@@ -9,7 +9,7 @@ int **matrix;							//Declaration of structure of Sudoku
 int edge;								
 
 int c;
-
+//cool stuff
 void readFile();
 void placeFindingRow();
 void placeFindingColumn();
