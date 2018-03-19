@@ -14,18 +14,21 @@ void readFile();
 void placeFindingRow();
 void placeFindingColumn();
 void printMatrix();
-void placeFindingSquareHorizontal();
+void placeFindingSquare();
+void availablePosition();
 
 // Main function
 int main(int argc, char *argv[])
 {
 	readFile(argv[1]);
-	/*
-	placeFindingRow();
-	placeFindingColumn();
-	placeFindingRow();
-	placeFindingColumn();*/
-	placeFindingSquareHorizontal();
+	
+	//placeFindingRow();
+	//placeFindingColumn();
+	//placeFindingRow();
+	//placeFindingColumn();
+	//placeFindingSquare();
+	availablePosition();
+	
 	printMatrix();
 	return 0;
 }
@@ -74,6 +77,7 @@ void readFile(char file[]){
 
 void placeFindingRow()
 {
+	int repeat = 0;
 	int *rowValues = malloc(edge*sizeof(int)); //vetor com os numeros presentes na linha
 	int colToChange;     //indice da coluna onde vai ser inserido o numero
 	int valueToInsert;	 //valor para ser inserido na posiçao matrix[i][colToChange]
@@ -104,6 +108,7 @@ void placeFindingRow()
 				}
 			}
 			matrix[i][colToChange] = valueToInsert;
+			repeat = 1;
 		}
 		
 		//reset counter and rowValues
@@ -112,6 +117,11 @@ void placeFindingRow()
 		{
 			rowValues[j]= 0;
 		}
+	}
+	
+	if(repeat == 1)
+	{
+		placeFindingSquare();
 	}
 	
 }
@@ -159,7 +169,7 @@ void placeFindingColumn()
 	}
 }
 
-void placeFindingSquareHorizontal() //vê se falta um elemento num quadrado e põe se faltar
+void placeFindingSquare() //vê se falta um elemento num quadrado e põe se faltar
 {
 	/*int **squareValues = (int **) malloc(l*sizeof(int *));
 	for(int i=0;i<l;i++)
@@ -220,6 +230,140 @@ void placeFindingSquareHorizontal() //vê se falta um elemento num quadrado e p�
 			}
 		}
 	}
+}
+
+void availablePosition()
+{
+	int repeat = 0;
+	
+	for(int i = 0; i < l; i++) //percorrer os blocos por linhas
+	{
+		for(int j = 0; j < l; j++) //percorrer os blocos nas colunas
+		{			
+			for(int k = 0; k < l; k++) //percorrer as linhas dentro do bloco
+			{
+				for(int t = 0; t < l; t++) //percorrer as colunas dentro do bloco
+				{
+					for(int n = 1; n <= edge; n++)	//para cada numero de 1 a L, tentar por no bloco de possivel
+					{
+						if(matrix[i*l+k][j*l+t] == 0) //se o espaço estiver vazio..
+						{
+							int boolean = 0;
+							
+							int **blockValues = (int **) malloc(l*sizeof(int *)); //bloco auxiliar para saber onde será possivel por o n, se sobrar um lugar disponivel pomos o n
+							for(int v=0; v<l; v++)
+							{
+								blockValues[v]=(int *) malloc(l*sizeof(int));
+							}
+							
+							/*for(int row = 0; row < l; row++) //começar o bloco a 0's //parece já começa a 0's
+							{
+								for(int col = 0; col < l; col++)
+								{
+									blockValues[row][col] = 0;									
+								}
+							}	*/
+							
+							for(int row = 0; row < l; row++) //ver se já existe o n no bloco e preencher bloco auxiliar
+							{
+								for(int col = 0; col < l; col++)
+								{
+									if(matrix[i*l+row][j*l+col] == n)
+									{
+										boolean = 1; //o n já existe no bloco
+									}
+									
+									if(matrix[i*l+row][j*l+col] != 0) //preencher o bloco auxiliar com 1's onde existem numeros
+									{
+										blockValues[row][col] = 1;
+									}
+								}
+							}
+							
+							if(boolean == 0) //se não existir o n no bloco..
+							{
+								//ver linhas e colunas adjacentes a ver onde por 1's no bloco auxiliar para dps descobrir onde por o n, se possivel
+								
+								for(int row = 0; row < l; row++) //Preencher linhas com 1's no bloco auxiliar em linhas em que o n nao pode estar (devido ao n estar noutro bloco, na mesma linha)
+								{
+									for(int col = 0; col < edge; col++)
+									{
+										if(matrix[i*l+row][col] == n) //se ouver um n na linha..
+										{
+											for(int v = 0; v < l; v++) //preencher essa linha com 1's
+											{
+												blockValues[row][v] = 1;
+											}											
+										}
+									}
+								}
+								
+								for(int col = 0; col < l; col++) //Preencher colunas com 1's no bloco auxiliar em colunas em que o n nao pode estar (devido ao n estar noutro bloco, na mesma coluna)
+								{
+									for(int row = 0; row < edge; row++)
+									{
+										if(matrix[row][j*l+col] == n) //se ouver um n na coluna..
+										{
+											for(int v = 0; v < l; v++) //preencher essa coluna com 1's
+											{
+												blockValues[v][col] = 1;
+											}											
+										}
+									}
+								}
+								
+								
+								// ver se tem um campo no bloco com 0, se tiver, por o n lá
+								int counter0 = 0;
+								int x = 0, y = 0;
+								for(int row = 0; row < l; row++) //começar o bloco a 0's //parece já começa a 0's
+								{
+									for(int col = 0; col < l; col++)
+									{
+										if(blockValues[row][col] == 0)
+										{
+											counter0++;
+											x = row;
+											y = col;
+										}											
+									}
+								}
+								
+								if(counter0 == 1)
+								{
+									matrix[i*l+x][j*l+y] = n;
+									repeat = 1;
+								}
+								counter0 = 0;
+								
+								/*
+								for(int row = 0; row < l; row++) //começar o bloco a 0's //parece já começa a 0's
+								{
+									for(int col = 0; col < l; col++)
+									{
+										printf("%d", blockValues[row][col]);									
+									}
+									printf("\n");
+								}
+								printf("\n");*/
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if(repeat == 1)
+	{
+		availablePosition();
+	}
+	else
+	{
+		placeFindingRow();
+	}
+	
+	
 }
 
 void printMatrix()
