@@ -5,11 +5,16 @@
 
 void readFile();
 void printMatrix();
+void fillAuxMatrix();
+_Bool existsInBlock();
+_Bool existsInRow();
+_Bool existsInColumn();
 void solveSudoku();
 
 //Global Variables
-int **matrix;							//Declaration of structure of Sudoku
-int l = 0;								
+int **matrix;	
+int **auxMatrix;						
+int l=0;								
 int edge=0;
 
 // Main function
@@ -36,11 +41,12 @@ void readFile(char file[])
 	l=value;
 	//Allocation of structure for Sudoku
 	matrix=(int **) malloc(edge*sizeof(int *));
+	auxMatrix=(int **) malloc(edge*sizeof(int *));
 	for(int i=0;i<edge;i++)
 	{
 		matrix[i]=(int *) malloc(edge*sizeof(int));
+		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
 	}
-	
 	
 	int i=0;	
 	int j=0;
@@ -58,6 +64,7 @@ void readFile(char file[])
 			j++;
 		}
     } 
+	fillAuxMatrix();
 	 
 }
 
@@ -76,89 +83,151 @@ void printMatrix()
 
 void solveSudoku()
 {
-	_Bool pass=1;
-	while(1)
+	int initRow=0;
+	int initColumn=0;
+	
+	for(int i=0;i<edge;i++)
 	{
-		pass=1;
-		for(int i=0;i<edge;i=i+l)/////////////////////////////steps into block
-		{
-		
-			for(int j=0;j<edge;j=j+l)
+		if(i%l==0)
+			initRow=i;
+		for(int j=0;j<edge;j++)
+		{	
+			if(j%l==0)
+				initColumn=j;
+			if(auxMatrix[i][j]==0)
 			{
-				
-				for(int x=0;x<l;x++)/////////////////////////identify a 0 in a block
-				{
-					
-					for(int y=0;y<l;y++)
-					{
+				int num=0;
+				while(num<=edge)
+				{	
+					num++;
+					if(existsInBlock(initRow,initColumn,num))
+						continue;
+					if(existsInRow(i,j,num))
+						continue;
+					if(existsInColumn(i,j,num))
+						continue;
 						
-						if(matrix[i+x][j+y]==0)
+					if(num>edge)
+					{
+						_Bool nextC=0;
+						_Bool nextR=0;
+						num=0;
+						do
 						{
-							pass=0;
-							for(int num=1;num<=edge;num++)//////////////////////try to put the number in the empty space
+							j--;
+							if(j<0)
 							{
-								
-								_Bool existInBlock=0;
-								for(int xB=0;xB<l;xB++)/////////////////////////////////////to see if the number already exists in the block 
-								{
-									
-									for(int yB=0;yB<l;yB++)
-									{
-										
-										if(matrix[i+xB][j+yB]==num)
-										{
-											existInBlock=1;
-											break;
-										}
-										
-									}
-									if(existInBlock)
-										break;
-								}///////////////////////////////////////////////////////////
-								if(existInBlock)
-									continue;
-								
-								_Bool existInRow=0;
-								for(int column=0;column<edge;column++)/////////////////////////////////////to see if the number already exists in the row
-								{
-									if(column==y+j)
-										continue;
-									
-									if(matrix[i+x][column]==num)
-									{
-										existInRow=1;
-										break;
-									}
-								}//////////////////////////////////////////////////////////////////////////
-								if(existInRow)
-									continue;
-								
-								_Bool existInColumn=0;
-								for(int row=0;row<edge;row++)/////////////////////////////////////to see if the number already exists in the column
-								{
-									if(row==x+i)
-										continue;
-									
-									if(matrix[row][j+y]==num)
-									{
-										existInColumn=1;
-										break;
-									}
-								}/////////////////////////////////////////////////////////////////
-								if(existInColumn)
-									continue;
-								matrix[i+x][j+y]=num;
-								break;
-							}//////////////////////////////////////////////////
+								j=edge-1; i--;
+								initColumn=edge-l;
+							}
+							if(i<0)
+							{
+								printf("Can't solve\n");
+								exit(1);
+							}
 							
+							if(j%l==0)
+							{
+								initColumn=j;
+								nextC=1;
+							}
+							else if(nextC==1)
+							{
+								initColumn-=l;
+								nextC=0;
+							}
+							
+							if(i%l==0)
+							{
+								initRow=i;
+								nextR=1;
+							}
+							else if(nextR==1)
+							{
+								initRow-=l;
+								nextR=0;
+							}
 							
 						}
 					}
-				}/////////////////////////////////////////////identify a 0 in a block
+					else
+					{
+						matrix[i][j]=num;
+						break;
+					}
+						
+				}
 			}
-		}/////////////////////////////steps into block
-		if(pass)
-			break;
+			
+		}
+		initColumn=0;
 	}
 	printMatrix();
+}
+
+
+void fillAuxMatrix()
+{
+	for(int i = 0; i<l*l; i++ )
+	{
+		for(int j = 0; j < l*l; j++)
+		{
+			auxMatrix[i][j]=matrix[i][j];		
+		}
+	}
+}
+
+
+_Bool existsInColumn(int i,int j, int num)
+{
+	_Bool existInColumn=0;
+	for(int row=0;row<edge;row++)
+	{
+		if(row==i)
+			continue;
+									
+		if(matrix[row][j]==num)
+		{
+			existInColumn=1;
+			break;
+		}
+	}
+	return existInColumn;
+}
+
+_Bool existsInRow(int i,int j, int num)
+{
+	_Bool existInRow=0;
+	for(int column=0;column<edge;column++)
+	{
+		if(column==j)
+			continue;
+									
+		if(matrix[i][column]==num)
+		{
+			existInRow=1;
+			break;
+		}
+	}
+	return existInRow;
+}
+
+_Bool existsInBlock(int initRow,int initColumn, int num)
+{
+	_Bool existInBlock=0;
+	for(int xB=0;xB<l;xB++)
+	{				
+		for(int yB=0;yB<l;yB++)
+		{
+
+			if(matrix[initRow+xB][initColumn+yB]==num)
+			{
+				existInBlock=1;
+				break;
+			}								
+		}
+		if(existInBlock)
+			break;
+	}
+	return existInBlock;
 }
