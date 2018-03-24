@@ -91,9 +91,9 @@ void solveSudoku()
 			if(auxMatrix[i][j]==0)
 			{
 				rollBack=1;
-				while(rollBack){
+				for(int something=0;rollBack==1;something){
 					rollBack=0;
-					while(matrix[i][j]<=edge)
+					for(int something2=0;matrix[i][j]<=edge;something2)
 					{	
 						matrix[i][j]++;
 						if(existsInBlock(matrix[i][j],i,j))
@@ -109,7 +109,20 @@ void solveSudoku()
 					{
 						rollBack=1;
 						matrix[i][j]=0;
-						do
+						
+						j--;
+						if(j<0)
+						{
+							j=edge-1; i--;
+						}
+						if(i<0)
+						{
+							printf("No solution\n");
+							exit(1);
+						}
+								
+							
+						for(int something3=0;auxMatrix[i][j]!=0;something3)
 						{
 							j--;
 							if(j<0)
@@ -118,12 +131,10 @@ void solveSudoku()
 							}
 							if(i<0)
 							{
-								printf("Can't solve\n");
+								printf("No solution\n");
 								exit(1);
 							}
-								
-							
-						}while(auxMatrix[i][j]!=0);
+						}
 					}
 				}
 			}
