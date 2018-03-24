@@ -83,90 +83,52 @@ void printMatrix()
 
 void solveSudoku()
 {
-	int initRow=0;
-	int initColumn=0;
-	
+	_Bool rollBack=1;
 	for(int i=0;i<edge;i++)
 	{
-		if(i%l==0)
-			initRow=i;
 		for(int j=0;j<edge;j++)
 		{	
-			if(j%l==0)
-				initColumn=j;
 			if(auxMatrix[i][j]==0)
 			{
-				int num=0;
-				while(num<=edge)
-				{	
-					num++;
-					if(existsInBlock(initRow,initColumn,num))
-						continue;
-					if(existsInRow(i,j,num))
-						continue;
-					if(existsInColumn(i,j,num))
-						continue;
-						
-					if(num>edge)
+				rollBack=1;
+				while(rollBack){
+					rollBack=0;
+					while(matrix[i][j]<=edge)
+					{	
+						matrix[i][j]++;
+						if(existsInBlock(matrix[i][j],i,j))
+							continue;
+						if(existsInRow(i,j,matrix[i][j]))
+							continue;
+						if(existsInColumn(i,j,matrix[i][j]))
+							continue;
+						break;
+					}
+					if(matrix[i][j]>edge)
 					{
-						_Bool nextC=0;
-						_Bool nextR=0;
-						num=0;
+						rollBack=1;
+						matrix[i][j]=0;
 						do
 						{
 							j--;
 							if(j<0)
 							{
 								j=edge-1; i--;
-								initColumn=edge-l;
-							}
-							if(i<0)
-							{
-								printf("Can't solve\n");
-								exit(1);
 							}
 							
-							if(j%l==0)
-							{
-								initColumn=j;
-								nextC=1;
-							}
-							else if(nextC==1)
-							{
-								initColumn-=l;
-								nextC=0;
-							}
-							
-							if(i%l==0)
-							{
-								initRow=i;
-								nextR=1;
-							}
-							else if(nextR==1)
-							{
-								initRow-=l;
-								nextR=0;
-							}
-							
-						}
+						}while(auxMatrix[i][j]!=0);
 					}
-					else
-					{
-						matrix[i][j]=num;
-						break;
-					}
-						
 				}
 			}
-			
+	
 		}
-		initColumn=0;
+	
 	}
 	printMatrix();
 }
 
 
-void fillAuxMatrix()
+void fillAuxMatrix() //fill auxiliary matrix with original matrix values
 {
 	for(int i = 0; i<l*l; i++ )
 	{
@@ -178,7 +140,7 @@ void fillAuxMatrix()
 }
 
 
-_Bool existsInColumn(int i,int j, int num)
+_Bool existsInColumn(int i,int j, int num) //identify if the number is already present in the column
 {
 	_Bool existInColumn=0;
 	for(int row=0;row<edge;row++)
@@ -195,7 +157,7 @@ _Bool existsInColumn(int i,int j, int num)
 	return existInColumn;
 }
 
-_Bool existsInRow(int i,int j, int num)
+_Bool existsInRow(int i,int j, int num) //identify if the number is already present in the row
 {
 	_Bool existInRow=0;
 	for(int column=0;column<edge;column++)
@@ -212,15 +174,14 @@ _Bool existsInRow(int i,int j, int num)
 	return existInRow;
 }
 
-_Bool existsInBlock(int initRow,int initColumn, int num)
+_Bool existsInBlock(int num,int i,int j) //identify if the number is already present in the block
 {
 	_Bool existInBlock=0;
-	for(int xB=0;xB<l;xB++)
+	for(int xB=0;xB<edge;xB++)
 	{				
-		for(int yB=0;yB<l;yB++)
+		for(int yB=0;yB<edge;yB++)
 		{
-
-			if(matrix[initRow+xB][initColumn+yB]==num)
+			if(xB!=i&&yB!=j&& (i/l==xB/l&&j/l==yB/l) &&matrix[i][j]==matrix[xB][yB])
 			{
 				existInBlock=1;
 				break;
