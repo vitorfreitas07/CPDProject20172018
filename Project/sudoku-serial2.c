@@ -14,8 +14,7 @@ void solveSudoku();
 //Global Variables
 int **matrix;	
 int **auxMatrix;						
-int l=0;								
-int edge=0;
+int l=0,edge=0;
 
 // Main function
 int main(int argc, char *argv[])
@@ -83,6 +82,7 @@ void printMatrix()
 
 void solveSudoku()
 {
+
 	_Bool rollBack=1;
 	for(int i=0;i<edge;i++)
 	{
@@ -104,6 +104,7 @@ void solveSudoku()
 							continue;
 						break;
 					}
+
 					if(matrix[i][j]>edge)
 					{
 						rollBack=1;
@@ -115,6 +116,12 @@ void solveSudoku()
 							{
 								j=edge-1; i--;
 							}
+							if(i<0)
+							{
+								printf("Can't solve\n");
+								exit(1);
+							}
+								
 							
 						}while(auxMatrix[i][j]!=0);
 					}
@@ -130,6 +137,7 @@ void solveSudoku()
 
 void fillAuxMatrix() //fill auxiliary matrix with original matrix values
 {
+
 	for(int i = 0; i<l*l; i++ )
 	{
 		for(int j = 0; j < l*l; j++)
