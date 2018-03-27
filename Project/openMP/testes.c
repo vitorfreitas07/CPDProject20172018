@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	//placeFindingRow();
 	//placeFindingColumn();
 	//placeFindingSquare();
-	availablePosition();
+	//availablePosition();
 	
 	printMatrix();
 	return 0;
@@ -368,9 +368,11 @@ void availablePosition()
 
 void printMatrix()
 {
-	for(int i = 0; i<edge; i++ )
+	int i, j;
+	#pragma omp parallel for private (i, j, matrix)
+	for(i = 0; i<edge; i++ )
 	{
-		for(int j = 0; j < edge; j++)
+		for(j = 0; j < edge; j++)
 		{
 			printf("%d ",matrix[i][j]);
 		}
