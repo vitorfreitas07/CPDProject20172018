@@ -6,10 +6,12 @@
 void readFile();
 void printMatrix();
 void fillAuxMatrix();
+void solveSudoku();
+void freeMatrix();
 _Bool existsInBlock();
 _Bool existsInRow();
 _Bool existsInColumn();
-void solveSudoku();
+
 
 //Global Variables
 int ***matrix;	
@@ -17,17 +19,20 @@ int **auxMatrix;
 int l=0,edge=0;
 int firstI;
 int firstJ;	
+int lastI;
+int lastJ;
 
 // Main function
 int main(int argc, char *argv[])
 {
 	readFile(argv[1]);
-	//solveSudoku();
+	solveSudoku();
 	//printMatrix();
+	//freeMatrix();
 	return 0;
 }
 
-/*
+
 void freeMatrix()
 {
 	for(int i=0;i<edge;i++)
@@ -35,13 +40,16 @@ void freeMatrix()
 		
 		for(int j = 0; i < edge; j++)
 		{
-			free matrix[i][j];
+			free(matrix[i][j]);
 		}
 		
-		matrix[i]=(int **) malloc(edge*sizeof(int *));
-		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
+		free(matrix[i]);
+		free(auxMatrix[i]);
 	}
-}*/
+	
+	free(matrix);
+	free(auxMatrix);
+}
 
 
 void readFile(char file[])
@@ -61,15 +69,20 @@ void readFile(char file[])
 	//Allocation of structure for Sudoku
 	matrix=(int ***) malloc(edge*sizeof(int **));
 	auxMatrix=(int **) malloc(edge*sizeof(int *));
-	for(int i=0;i<edge;i++)
+
+	//printf("Edge: %d\n", edge);
+	for(int i = 0; i < edge; i++)
 	{
 		matrix[i]=(int **) malloc(edge*sizeof(int *));
-		for(int j = 0; i < edge; j++)
+		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
+		for(int j = 0; j < edge; j++)
 		{
 			matrix[i][j]=(int *) malloc(edge*sizeof(int));
 		}
-		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
+		
 	}
+	
+	
 	
 	int i=0;	
 	int j=0;
@@ -80,6 +93,7 @@ void readFile(char file[])
 			{
 				matrix[i][j][k]=value;
 			}
+			auxMatrix[i][j] = value;
 			
 			j++;
 		}
@@ -92,27 +106,30 @@ void readFile(char file[])
 			{
 				matrix[i][j][k]=value;
 			}
+			auxMatrix[i][j] = value;
 			j++;
 		}
     } 
-	fillAuxMatrix();
-	 
-	 
+	//fillAuxMatrix();
+	
 	_Bool boolean = 0;
 	for(int i = 0; i < edge; i++)
 	{
 		for(int j = 0; j < edge; j++)
 		{
 			if(auxMatrix[i][j] == 0)
-			{				
-				firstI = i;
-				firstJ = j;
-				boolean = 1;
-				break;
+			{
+				lastI = i;
+				lastJ = j;
+				
+				if(boolean == 0)
+				{
+					firstI = i;
+					firstJ = j;
+					boolean = 1;
+				}
 			}
 		}
-		if(boolean)
-		{break;}
 	}
 	
 	auxMatrix[firstI][firstJ] = 1;
@@ -132,33 +149,34 @@ void printMatrix()
 		}
 		printf("----------------\n");
 	}
-	printf("----------------\n");
-	printf("----------------\n");
-	printf("----------------\n");
-	printf("----------------\n");
+	
+	printf("----------------\n");printf("----------------\n");printf("----------------\n");
 }
+
 
 void solveSudoku()
 {
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-	#pragma omp parallel for private (matrix)
+	#pragma omp parallel for 
 	for(int n = 1; n <= edge; n++)
 	{
 		end = 0;
 		
 		
 		//printMatrix();
-		//printf("%d\n", n);
-		if(existsInBlock(n, firstI, firstJ))
+		//printf("vou verificar o bloco para n = %d\n", n);
+		if(existsInBlock(n, firstI, firstJ, n))
 			continue;
-		if(existsInRow(firstI, firstJ, n))
+		//printf("vou verificar a linha para n = %d\n", n);
+		if(existsInRow(firstI, firstJ, n, n))
 			continue;
-		if(existsInColumn(firstI, firstJ, n))
+		//printf("vou verificar a coluna para n = %d\n", n);
+		if(existsInColumn(firstI, firstJ, n, n))
 			continue;
 		
-		matrix[firstI][firstJ] = n;
+		matrix[firstI][firstJ][n-1] = n;
 		//printf("%d\n",n);
 		
 		
@@ -169,28 +187,30 @@ void solveSudoku()
 				
 				if(auxMatrix[i][j]==0)
 				{
-					//printf("lol\n");
+					
+					//printf("i: %d, j: %d\n", i, j);
 					rollBack=1;
 					while(rollBack==1)
 					{
 						rollBack=0;
 						_Bool rowE=1,columnE=1,blockE=1;
 						
-						while((rowE == 1 || columnE == 1 || blockE == 1) && matrix[i][j] <= edge)
+						while((rowE == 1 || columnE == 1 || blockE == 1) && matrix[i][j][n - 1] <= edge)
 						{						
-							matrix[i][j]++;
-							
-							blockE=existsInBlock(matrix[i][j],i,j);
-							rowE=existsInRow(i,j,matrix[i][j]); 
-							columnE=existsInColumn(i,j,matrix[i][j]);
+							matrix[i][j][n-1]++;
+							//printMatrix();
+							blockE=existsInBlock(matrix[i][j][n-1],i,j, n);
+							rowE=existsInRow(i,j,matrix[i][j][n-1], n); 
+							columnE=existsInColumn(i,j,matrix[i][j][n-1], n);
 						}
 						
 
-						if(matrix[i][j]>edge)
+						if(matrix[i][j][n-1]>edge)
 						{
+							//printf("Fiz Rollback: %d\n", matrix[i][j][n-1]);
 							
 							rollBack=1;
-							matrix[i][j]=0;
+							matrix[i][j][n-1]=0;
 							do
 							{
 								
@@ -214,6 +234,15 @@ void solveSudoku()
 							while(auxMatrix[i][j]!=0);
 							
 						}
+						else
+						{
+							if(i == lastI && j == lastJ)
+							{
+								printMatrix();
+								exit(0);
+							}
+							
+						}
 						if(end)
 							break;
 						
@@ -231,7 +260,7 @@ void solveSudoku()
 }
 
 
-void fillAuxMatrix() //fill auxiliary matrix with original matrix values
+/*void fillAuxMatrix() //fill auxiliary matrix with original matrix values
 {
 
 	for(int i = 0; i<l*l; i++ )
@@ -241,10 +270,10 @@ void fillAuxMatrix() //fill auxiliary matrix with original matrix values
 			auxMatrix[i][j]=matrix[i][j];		
 		}
 	}
-}
+}*/
 
 
-_Bool existsInColumn(int i,int j, int num) //identify if the number is already present in the column
+_Bool existsInColumn(int i,int j, int num, int n) //identify if the number is already present in the column
 {
 	_Bool existInColumn=0;
 	for(int row=0;row<edge;row++)
@@ -252,9 +281,9 @@ _Bool existsInColumn(int i,int j, int num) //identify if the number is already p
 		if(row==i)
 			continue;
 									
-		if(matrix[row][j]==num)
+		if(matrix[row][j][n-1]==num)
 		{
-			//printf("Nao posso por o %d em [%d][%d] (coluna)\n", num, row, j);
+			//printf("Nao posso por o %d em [%d][%d] (coluna)\n", num, i, j);
 			existInColumn=1;
 			break;
 		}
@@ -262,7 +291,7 @@ _Bool existsInColumn(int i,int j, int num) //identify if the number is already p
 	return existInColumn;
 }
 
-_Bool existsInRow(int i,int j, int num) //identify if the number is already present in the row
+_Bool existsInRow(int i,int j, int num, int n) //identify if the number is already present in the row
 {
 	_Bool existInRow=0;
 	for(int column=0;column<edge;column++)
@@ -270,9 +299,9 @@ _Bool existsInRow(int i,int j, int num) //identify if the number is already pres
 		if(column==j)
 			continue;
 									
-		if(matrix[i][column]==num)
+		if(matrix[i][column][n-1]==num)
 		{
-			//printf("Nao posso por o %d em [%d][%d] (linha)\n", num, i, column);
+			//printf("Nao posso por o %d em [%d][%d] (linha)\n", num, i, j);
 			existInRow=1;
 			break;
 		}
@@ -280,22 +309,48 @@ _Bool existsInRow(int i,int j, int num) //identify if the number is already pres
 	return existInRow;
 }
 
-_Bool existsInBlock(int num,int i,int j) //identify if the number is already present in the block
+_Bool existsInBlock(int num,int i,int j, int n) //identify if the number is already present in the block
 {
+	
+	
 	_Bool existInBlock=0;
+	for(int row = 0; row < l; row++) //ver se já existe o n no bloco
+	{
+		for(int col = 0; col < l; col++)
+		{
+			if(matrix[(i/l)*l+row][(j/l)*l+col][n-1] == num && (i != (l*(i/l) + row) && j != (l*(j/l) + col)))
+			{
+				
+				//printf("Nao posso por o %d no bloco [%d][%d]\n", num, i/l, j/l);
+				existInBlock=1;
+				break;
+			}
+		}
+		if(existInBlock)
+			break;
+	}
+	
+	
+	
+	
+	/*
 	for(int xB=0;xB<edge;xB++)
 	{				
 		for(int yB=0;yB<edge;yB++)
 		{
-			if(xB!=i&&yB!=j&& (i/l==xB/l&&j/l==yB/l) && num ==matrix[xB][yB])
+			if(xB!=i&&yB!=j && (i/l==xB/l&&j/l==yB/l) && num ==matrix[xB][yB][n-1])
 			{
-				//printf("xB: %d, yB\n", num, i/l, j/l);
+				
 				existInBlock=1;
 				break;
 			}								
 		}
 		if(existInBlock)
 			break;
+	}*/
+	if(!existInBlock)
+	{
+		//printf("Posso por o %d no bloco [%d][%d]\n", num, i/l, j/l);
 	}
 	return existInBlock;
 }
