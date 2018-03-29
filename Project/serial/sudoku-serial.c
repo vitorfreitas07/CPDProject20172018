@@ -187,15 +187,15 @@ _Bool existsInRow(int i,int j, int num) //identify if the number is already pres
 _Bool existsInBlock(int num,int i,int j) //identify if the number is already present in the block
 {
 	_Bool existInBlock=0;
-	for(int xB=0;xB<edge;xB++)
-	{				
-		for(int yB=0;yB<edge;yB++)
+	for(int row = 0; row < l; row++)
+	{
+		for(int col = 0; col < l; col++)
 		{
-			if(xB!=i&&yB!=j&& (i/l==xB/l&&j/l==yB/l) &&matrix[i][j]==matrix[xB][yB])
+			if(matrix[(i/l)*l+row][(j/l)*l+col] == num && (i != (l*(i/l) + row) && j != (l*(j/l) + col)))
 			{
 				existInBlock=1;
 				break;
-			}								
+			}
 		}
 		if(existInBlock)
 			break;
