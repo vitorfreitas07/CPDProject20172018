@@ -5,6 +5,7 @@
 
 void readFile();
 void printMatrix();
+int canNbeHere();
 void solveSudoku();
 void freeMatrix();
 _Bool existsInBlock();
@@ -16,24 +17,27 @@ _Bool existsInColumn();
 int ***matrix;	
 int **auxMatrix;						
 int l=0,edge=0;
-int firstI, firstJ, lastI, lastJ;
+int firstI, firstJ, lastI, lastJ, numThreads;
 
 // Main function
 int main(int argc, char *argv[])
 {
-<<<<<<< HEAD
-	//printf("numThreads: %d\n", omp_get_num_threads());
-	//omp_set_num_threads(16);
 	
-	/*#pragma omp parallel
-	{
-		printf("numThreads: %d\n", omp_get_num_threads());
-	}*/
-=======
+
 	//omp_set_num_threads(2);
->>>>>>> 771e0a25cd6e456a4945e18abadd610db76a87b5
-	readFile(argv[1]);
-	solveSudoku();
+	
+	//omp_get_num_threads -> nº de threads atuais. 1 se fora de uma zona paralela, 4 se dentro de uma zona paralela
+	//omp_get_max_threads -> nº max de threads disponiveis no pc que é o numero predefinido. mas se fizermos um set de threads, dá esse set (usar este!)
+	//omp_get_thread_num  -> id da thread. começa em 0
+	//numThreads = omp_get_max_threads();
+	//printf("numThreads: %d\n", numThreads);
+
+	
+
+
+
+	//readFile(argv[1]);
+	//solveSudoku();
 	//freeMatrix();
 	return 0;
 }
@@ -81,7 +85,7 @@ void readFile(char file[])
 		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
 		for(int j = 0; j < edge; j++)
 		{
-			matrix[i][j]=(int *) malloc(edge*sizeof(int));
+			matrix[i][j]=(int *) malloc(edge*sizeof(int)); 
 		}
 		
 	}
@@ -149,9 +153,7 @@ void printMatrix(int k)
 		}
 		printf("\n");
 	}
-		
 	printf("\n");
-	
 }
 
 
@@ -160,22 +162,16 @@ void solveSudoku()
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-<<<<<<< HEAD
-	#pragma omp parallel for firstprivate(rollBack, end)
-=======
-	#pragma omp parallel for firstprivate(rollBack,end)
->>>>>>> 771e0a25cd6e456a4945e18abadd610db76a87b5
+	//#pragma omp parallel for firstprivate(end, rollBack)
 	for(int n = 1; n <= edge; n++)
 	{
+		//int myId = omp_get_thread_num();
 		end = 0;
-		if(existsInBlock(n, firstI, firstJ, n))
-			continue;
-		if(existsInRow(firstI, firstJ, n, n))
-			continue;
-		if(existsInColumn(firstI, firstJ, n, n))
+		if(canNbeHere(firstI, firstJ, n, n))
 			continue;
 		
 		matrix[firstI][firstJ][n-1] = n;
+		//printf("Posso por o %d\n", n);
 
 		for(int i=0;i<edge;i++)
 		{
@@ -184,26 +180,26 @@ void solveSudoku()
 				
 				if(auxMatrix[i][j]==0)
 				{
+					//printf("Vendo o [%d][%d]\n", i, j);
 					rollBack=1;
 					while(rollBack==1)
 					{
 						rollBack=0;
+						int try = matrix[i][j][n-1];
 						
-						while( matrix[i][j][n - 1] <= edge)
+						while( try <= edge)
 						{						
-							matrix[i][j][n-1]++;
-							if(existsInBlock(matrix[i][j][n-1],i,j, n))
+							try++;
+							if(canNbeHere(i,j,try, n))
 								continue;
-							if(existsInRow(i,j,matrix[i][j][n-1], n))
-								continue;
-							if(existsInColumn(i,j,matrix[i][j][n-1], n))
-								continue;
+							matrix[i][j][n-1] = try;
 							break;
 						}
 						
 
-						if(matrix[i][j][n-1]>edge)
+						if(try>edge)
 						{
+							//printf("Try ficou maior que o edge -> %d\n", try);
 							
 							rollBack=1;
 							matrix[i][j][n-1]=0;
@@ -246,6 +242,49 @@ void solveSudoku()
 		printf("Can't solve with %d\n",n);
 	}
 	printf("No solution\n");
+}
+
+
+int canNbeHere(int i,int j, int num, int n)
+{
+	
+	//Checks Block
+	for(int row = 0; row < l; row++)
+	{
+		for(int col = 0; col < l; col++)
+		{
+			if(matrix[(i/l)*l+row][(j/l)*l+col][n-1] == num ) //&& (i != (l*(i/l) + row) && j != (l*(j/l) + col))
+			{
+				return 1;
+			}
+		}
+	}
+	
+	//Cecks Row
+	for(int column=0;column<edge;column++)
+	{
+		//if(column==j)
+			//continue;
+									
+		if(matrix[i][column][n-1]==num)
+		{
+			return 1;
+		}
+	}
+
+	//Checks Column
+	for(int row=0;row<edge;row++)
+	{
+		//if(row==i)
+			//continue;
+									
+		if(matrix[row][j][n-1]==num)
+		{
+			return 1;
+		}
+	}
+	
+	return 0;
 }
 
 _Bool existsInColumn(int i,int j, int num, int n) //identify if the number is already present in the column
