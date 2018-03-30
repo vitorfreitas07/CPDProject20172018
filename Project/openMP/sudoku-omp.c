@@ -21,6 +21,7 @@ int firstI, firstJ, lastI, lastJ;
 // Main function
 int main(int argc, char *argv[])
 {
+	//omp_set_num_threads(2);
 	readFile(argv[1]);
 	solveSudoku();
 	//freeMatrix();
@@ -74,6 +75,7 @@ void readFile(char file[])
 		}
 		
 	}
+	
 	
 	int i=0;	
 	int j=0;
@@ -148,7 +150,7 @@ void solveSudoku()
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-	#pragma omp parallel for 
+	#pragma omp parallel for firstprivate(rollBack,end)
 	for(int n = 1; n <= edge; n++)
 	{
 		end = 0;
@@ -219,7 +221,6 @@ void solveSudoku()
 						}
 						if(end)
 							break;
-						
 					}
 				}
 				if(end)
@@ -227,7 +228,7 @@ void solveSudoku()
 			}
 			if(end)
 				break;
-		}		
+		}	
 	}
 	printf("No solution\n");
 }
