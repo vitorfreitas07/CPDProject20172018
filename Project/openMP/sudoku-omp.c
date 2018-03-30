@@ -229,6 +229,7 @@ void solveSudoku()
 			if(end)
 				break;
 		}	
+		printf("Can't solve with %d\n",n);
 	}
 	printf("No solution\n");
 }
