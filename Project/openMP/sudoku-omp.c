@@ -21,6 +21,13 @@ int firstI, firstJ, lastI, lastJ;
 // Main function
 int main(int argc, char *argv[])
 {
+	//printf("numThreads: %d\n", omp_get_num_threads());
+	//omp_set_num_threads(16);
+	
+	/*#pragma omp parallel
+	{
+		printf("numThreads: %d\n", omp_get_num_threads());
+	}*/
 	readFile(argv[1]);
 	solveSudoku();
 	//freeMatrix();
@@ -148,7 +155,7 @@ void solveSudoku()
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-	#pragma omp parallel for 
+	#pragma omp parallel for firstprivate(rollBack, end)
 	for(int n = 1; n <= edge; n++)
 	{
 		end = 0;
