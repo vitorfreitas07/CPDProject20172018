@@ -29,15 +29,15 @@ int main(int argc, char *argv[])
 	//omp_get_num_threads -> nº de threads atuais. 1 se fora de uma zona paralela, 4 se dentro de uma zona paralela
 	//omp_get_max_threads -> nº max de threads disponiveis no pc que é o numero predefinido. mas se fizermos um set de threads, dá esse set (usar este!)
 	//omp_get_thread_num  -> id da thread. começa em 0
-	//numThreads = omp_get_max_threads();
+	
 	//printf("numThreads: %d\n", numThreads);
-
+	numThreads = omp_get_max_threads();
 	
 
 
 
-	//readFile(argv[1]);
-	//solveSudoku();
+	readFile(argv[1]);
+	solveSudoku();
 	//freeMatrix();
 	return 0;
 }
@@ -64,6 +64,7 @@ void freeMatrix()
 void readFile(char file[])
 {
 	
+	
 	int value;
     FILE *input = fopen(file, "r"); // read only  
        
@@ -75,28 +76,29 @@ void readFile(char file[])
 	fscanf(input, "%d", &value );
 	edge=value*value;
 	l=value;
+	
 	//Allocation of structure for Sudoku
 	matrix=(int ***) malloc(edge*sizeof(int **));
 	auxMatrix=(int **) malloc(edge*sizeof(int *));
 
+	
 	for(int i = 0; i < edge; i++)
 	{
 		matrix[i]=(int **) malloc(edge*sizeof(int *));
 		auxMatrix[i]=(int *) malloc(edge*sizeof(int));
 		for(int j = 0; j < edge; j++)
 		{
-			matrix[i][j]=(int *) malloc(edge*sizeof(int)); 
+			matrix[i][j]=(int *) malloc(numThreads*sizeof(int)); 
 		}
 		
 	}
-	
 	
 	int i=0;	
 	int j=0;
     while ( fscanf(input, "%d", &value ) == 1 ){ 
 		if(j < edge) 
 		{
-			for(int k = 0; k < edge; k++)
+			for(int k = 0; k < numThreads; k++)
 			{
 				matrix[i][j][k]=value;
 			}
@@ -109,7 +111,7 @@ void readFile(char file[])
 			j=0;
 			i++;
 			
-			for(int k = 0; k < edge; k++)
+			for(int k = 0; k < numThreads; k++)
 			{
 				matrix[i][j][k]=value;
 			}
@@ -162,15 +164,16 @@ void solveSudoku()
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-	//#pragma omp parallel for firstprivate(end, rollBack)
+	#pragma omp parallel for firstprivate(end, rollBack)
 	for(int n = 1; n <= edge; n++)
 	{
-		//int myId = omp_get_thread_num();
+		int myId = omp_get_thread_num();
+		//printf("myId: %d\n", myId);
 		end = 0;
-		if(canNbeHere(firstI, firstJ, n, n))
+		if(canNbeHere(firstI, firstJ, n, myId+1))
 			continue;
 		
-		matrix[firstI][firstJ][n-1] = n;
+		matrix[firstI][firstJ][myId] = n;
 		//printf("Posso por o %d\n", n);
 
 		for(int i=0;i<edge;i++)
@@ -185,14 +188,14 @@ void solveSudoku()
 					while(rollBack==1)
 					{
 						rollBack=0;
-						int try = matrix[i][j][n-1];
+						int try = matrix[i][j][myId];
 						
 						while( try <= edge)
 						{						
 							try++;
-							if(canNbeHere(i,j,try, n))
+							if(canNbeHere(i,j,try, myId+1))
 								continue;
-							matrix[i][j][n-1] = try;
+							matrix[i][j][myId] = try;
 							break;
 						}
 						
@@ -202,7 +205,7 @@ void solveSudoku()
 							//printf("Try ficou maior que o edge -> %d\n", try);
 							
 							rollBack=1;
-							matrix[i][j][n-1]=0;
+							matrix[i][j][myId]=0;
 							do
 							{	
 								j--;
@@ -224,7 +227,7 @@ void solveSudoku()
 						{
 							if(i == lastI && j == lastJ)
 							{
-								printMatrix(n-1);
+								printMatrix(myId);
 								exit(0);
 							}
 							
