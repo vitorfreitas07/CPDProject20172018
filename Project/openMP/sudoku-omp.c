@@ -3,70 +3,32 @@
 #include<omp.h>
 #include <string.h>
 
+//funtiopm prototypes
 void readFile();
 void printMatrix();
 int canNbeHere();
 void solveSudoku();
-void freeMatrix();
-_Bool existsInBlock();
-_Bool existsInRow();
-_Bool existsInColumn();
 
-
-//Global Variables
+//global Variables
 int ***matrix;	
 int **auxMatrix;						
 int l=0,edge=0;
 int firstI, firstJ, lastI, lastJ, numThreads;
 
-// Main function
+//main function
 int main(int argc, char *argv[])
 {
-	
-
-	//omp_set_num_threads(2);
-	
-	//omp_get_num_threads -> nº de threads atuais. 1 se fora de uma zona paralela, 4 se dentro de uma zona paralela
-	//omp_get_max_threads -> nº max de threads disponiveis no pc que é o numero predefinido. mas se fizermos um set de threads, dá esse set (usar este!)
-	//omp_get_thread_num  -> id da thread. começa em 0
-	
-	//printf("numThreads: %d\n", numThreads);
 	numThreads = omp_get_max_threads();
-	
-
-
-
 	readFile(argv[1]);
 	solveSudoku();
-	//freeMatrix();
 	return 0;
 }
 
-void freeMatrix()
-{
-	for(int i=0;i<edge;i++)
-	{
-		
-		for(int j = 0; i < edge; j++)
-		{
-			free(matrix[i][j]);
-		}
-		
-		free(matrix[i]);
-		free(auxMatrix[i]);
-	}
-	
-	free(matrix);
-	free(auxMatrix);
-}
-
-
+//read the file and fill the matrix with its value
 void readFile(char file[])
 {
-	
-	
 	int value;
-    FILE *input = fopen(file, "r"); // read only  
+    FILE *input = fopen(file, "r"); //read only  
        
     if (! input ) {  
         printf("oops, file can't be read\n"); 
@@ -81,7 +43,6 @@ void readFile(char file[])
 	matrix=(int ***) malloc(edge*sizeof(int **));
 	auxMatrix=(int **) malloc(edge*sizeof(int *));
 
-	
 	for(int i = 0; i < edge; i++)
 	{
 		matrix[i]=(int **) malloc(edge*sizeof(int *));
@@ -89,8 +50,7 @@ void readFile(char file[])
 		for(int j = 0; j < edge; j++)
 		{
 			matrix[i][j]=(int *) malloc(numThreads*sizeof(int)); 
-		}
-		
+		}	
 	}
 	
 	int i=0;	
@@ -119,7 +79,7 @@ void readFile(char file[])
 			j++;
 		}
     } 
-	
+
 	//to obtain the first and last cell where there is a zero 
 	_Bool boolean = 0;
 	for(int i = 0; i < edge; i++)
@@ -140,7 +100,6 @@ void readFile(char file[])
 			}
 		}
 	}
-	
 	auxMatrix[firstI][firstJ] = 1;
 }
 
@@ -158,77 +117,68 @@ void printMatrix(int k)
 	printf("\n");
 }
 
-
 void solveSudoku()
 {
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
 	#pragma omp parallel for firstprivate(end, rollBack) schedule(dynamic,1) //num_threads(numThreads)
-	for(int n = 1; n <= edge; n++)
+	for(int n = 1; n <= edge; n++) //test all the possible numbers from 1 to edge in the first cell where there's a 0
 	{
 		int myId = omp_get_thread_num();
-		//printf("myId: %d\n", myId);
 		end = 0;
 		if(canNbeHere(firstI, firstJ, n, myId+1))
 		{
-			printf("Thread %d can't solve with %d\n", myId,n);
+			//printf("Thread %d can't solve with %d\n", myId,n);
 			continue;
 		}
-		
 		matrix[firstI][firstJ][myId] = n;
-		//printf("Posso por o %d\n", n);
 
-		for(int i=0;i<edge;i++)
+		for(int i=0;i<edge;i++) //to go through every row of the matrix
 		{
-			for(int j=0;j<edge;j++)
+			for(int j=0;j<edge;j++) //to go through every column of the matrix
 			{	
 				
-				if(auxMatrix[i][j]==0)
+				if(auxMatrix[i][j]==0)  //if a given cell started with zero
 				{
-					//printf("Vendo o [%d][%d]\n", i, j);
 					rollBack=1;
 					while(rollBack==1)
 					{
 						rollBack=0;
 						int try = matrix[i][j][myId];
 						
-						while( try <= edge)
+						while( try <= edge)  //try every number from 1 to edge
 						{						
 							try++;
-							if(canNbeHere(i,j,try, myId+1))
+							if(canNbeHere(i,j,try, myId))
 								continue;
 							matrix[i][j][myId] = try;
 							break;
 						}
-						
 
-						if(try>edge)
+						if(try>edge) //if the try variable is edge+1
 						{
-							//printf("Try ficou maior que o edge -> %d\n", try);
-							
 							rollBack=1;
 							matrix[i][j][myId]=0;
 							do
-							{	
+							{	//go to the previous cell
 								j--;
 								if(j<0)
 								{
 									j=edge-1; i--;
 								}
-								if(i == firstI && j == firstJ)
+								if(i == firstI && j == firstJ) 
 								{
-									end = 1;
+									end = 1;  //can't solve with this n
 									break;
 								}	
 									
 							}	
 							while(auxMatrix[i][j]!=0);
-							
 						}
 						else
 						{
-							if(i == lastI && j == lastJ)
+							if(i == lastI && j == lastJ) //if it's the last cell
 							{
 								#pragma omp critical
 								{
@@ -236,7 +186,6 @@ void solveSudoku()
 									exit(0);
 								}
 							}
-							
 						}
 						if(end)
 							break;
@@ -248,103 +197,40 @@ void solveSudoku()
 			if(end)
 				break;
 		}	
-		printf("Thread %d can't solve with %d\n", myId,n);
+		//printf("Thread %d can't solve with %d\n", myId,n);
 	}
 	printf("No solution\n");
 }
 
 
-int canNbeHere(int i,int j, int num, int n)
+int canNbeHere(int i,int j, int num, int n) //check if there's an equal value in the same row, column and block
 {
-	
 	//Checks Block
 	for(int row = 0; row < l; row++)
 	{
 		for(int col = 0; col < l; col++)
 		{
-			if(matrix[(i/l)*l+row][(j/l)*l+col][n-1] == num ) //&& (i != (l*(i/l) + row) && j != (l*(j/l) + col))
+			if(matrix[(i/l)*l+row][(j/l)*l+col][n] == num )
 			{
 				return 1;
 			}
 		}
 	}
-	
 	//Cecks Row
 	for(int column=0;column<edge;column++)
-	{
-		//if(column==j)
-			//continue;
-									
-		if(matrix[i][column][n-1]==num)
+	{						
+		if(matrix[i][column][n]==num)
 		{
 			return 1;
 		}
 	}
-
 	//Checks Column
 	for(int row=0;row<edge;row++)
-	{
-		//if(row==i)
-			//continue;
-									
-		if(matrix[row][j][n-1]==num)
+	{				
+		if(matrix[row][j][n]==num)
 		{
 			return 1;
 		}
 	}
-	
 	return 0;
-}
-
-_Bool existsInColumn(int i,int j, int num, int n) //identify if the number is already present in the column
-{
-	_Bool existInColumn=0;
-	for(int row=0;row<edge;row++)
-	{
-		if(row==i)
-			continue;
-									
-		if(matrix[row][j][n-1]==num)
-		{
-			existInColumn=1;
-			break;
-		}
-	}
-	return existInColumn;
-}
-
-_Bool existsInRow(int i,int j, int num, int n) //identify if the number is already present in the row
-{
-	_Bool existInRow=0;
-	for(int column=0;column<edge;column++)
-	{
-		if(column==j)
-			continue;
-									
-		if(matrix[i][column][n-1]==num)
-		{
-			existInRow=1;
-			break;
-		}
-	}
-	return existInRow;
-}
-
-_Bool existsInBlock(int num,int i,int j, int n) //identify if the number is already present in the block
-{
-	_Bool existInBlock=0;
-	for(int row = 0; row < l; row++)
-	{
-		for(int col = 0; col < l; col++)
-		{
-			if(matrix[(i/l)*l+row][(j/l)*l+col][n-1] == num && (i != (l*(i/l) + row) && j != (l*(j/l) + col)))
-			{
-				existInBlock=1;
-				break;
-			}
-		}
-		if(existInBlock)
-			break;
-	}
-	return existInBlock;
 }
