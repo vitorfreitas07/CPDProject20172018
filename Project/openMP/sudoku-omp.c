@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 {
 	
 
+	omp_set_num_threads(16);
 	
 	//omp_get_num_threads -> nº de threads atuais. 1 se fora de uma zona paralela, 4 se dentro de uma zona paralela
 	//omp_get_max_threads -> nº max de threads disponiveis no pc que é o numero predefinido. mas se fizermos um set de threads, dá esse set (usar este!)
