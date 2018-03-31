@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 {
 	
 
-	omp_set_num_threads(16);
+	//omp_set_num_threads(2);
 	
 	//omp_get_num_threads -> nº de threads atuais. 1 se fora de uma zona paralela, 4 se dentro de uma zona paralela
 	//omp_get_max_threads -> nº max de threads disponiveis no pc que é o numero predefinido. mas se fizermos um set de threads, dá esse set (usar este!)
@@ -164,15 +164,17 @@ void solveSudoku()
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
-	#pragma omp parallel for firstprivate(end, rollBack)
-	#pragma omp parallel for firstprivate(end, rollBack) schedule(dynamic,1) num_threads(numThreads)
+	#pragma omp parallel for firstprivate(end, rollBack) schedule(dynamic,1) //num_threads(numThreads)
 	for(int n = 1; n <= edge; n++)
 	{
 		int myId = omp_get_thread_num();
 		//printf("myId: %d\n", myId);
 		end = 0;
 		if(canNbeHere(firstI, firstJ, n, myId+1))
+		{
+			printf("Thread %d can't solve with %d\n", myId,n);
 			continue;
+		}
 		
 		matrix[firstI][firstJ][myId] = n;
 		//printf("Posso por o %d\n", n);
@@ -228,8 +230,11 @@ void solveSudoku()
 						{
 							if(i == lastI && j == lastJ)
 							{
-								printMatrix(myId);
-								exit(0);
+								#pragma omp critical
+								{
+									printMatrix(myId);
+									exit(0);
+								}
 							}
 							
 						}
@@ -243,7 +248,7 @@ void solveSudoku()
 			if(end)
 				break;
 		}	
-		printf("Can't solve with %d\n",myId);
+		printf("Thread %d can't solve with %d\n", myId,n);
 	}
 	printf("No solution\n");
 }
