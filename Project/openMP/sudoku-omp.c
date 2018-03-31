@@ -165,6 +165,7 @@ void solveSudoku()
 	_Bool rollBack=1;
 	
 	#pragma omp parallel for firstprivate(end, rollBack)
+	#pragma omp parallel for firstprivate(end, rollBack) schedule(dynamic,1) num_threads(numThreads)
 	for(int n = 1; n <= edge; n++)
 	{
 		int myId = omp_get_thread_num();
@@ -242,7 +243,7 @@ void solveSudoku()
 			if(end)
 				break;
 		}	
-		printf("Can't solve with %d\n",n);
+		printf("Can't solve with %d\n",myId);
 	}
 	printf("No solution\n");
 }

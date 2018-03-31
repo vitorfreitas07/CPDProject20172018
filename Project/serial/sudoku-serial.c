@@ -6,10 +6,8 @@
 void readFile();
 void printMatrix();
 void fillAuxMatrix();
-_Bool existsInBlock();
-_Bool existsInRow();
-_Bool existsInColumn();
 void solveSudoku();
+int canNbeHere();
 
 //Global Variables
 int **matrix;	
@@ -94,19 +92,17 @@ void solveSudoku()
 				while(rollBack==1)
 				{
 					rollBack=0;
-					while(matrix[i][j]<=edge)
+					int try = matrix[i][j];
+					while(try<=edge)
 					{	
-						matrix[i][j]++;
-						if(existsInBlock(matrix[i][j],i,j))
+						try++;
+						if(canNbeHere(i,j,try))
 							continue;
-						if(existsInRow(i,j,matrix[i][j]))
-							continue;
-						if(existsInColumn(i,j,matrix[i][j]))
-							continue;
+						matrix[i][j] = try;
 						break;
 					}
 
-					if(matrix[i][j]>edge)
+					if(try>edge)
 					{
 						rollBack=1;
 						matrix[i][j]=0;
@@ -150,55 +146,39 @@ void fillAuxMatrix() //fill auxiliary matrix with original matrix values
 }
 
 
-_Bool existsInColumn(int i,int j, int num) //identify if the number is already present in the column
+int canNbeHere(int i,int j, int num)
 {
-	_Bool existInColumn=0;
-	for(int row=0;row<edge;row++)
-	{
-		if(row==i)
-			continue;
-									
-		if(matrix[row][j]==num)
-		{
-			existInColumn=1;
-			break;
-		}
-	}
-	return existInColumn;
-}
-
-_Bool existsInRow(int i,int j, int num) //identify if the number is already present in the row
-{
-	_Bool existInRow=0;
-	for(int column=0;column<edge;column++)
-	{
-		if(column==j)
-			continue;
-									
-		if(matrix[i][column]==num)
-		{
-			existInRow=1;
-			break;
-		}
-	}
-	return existInRow;
-}
-
-_Bool existsInBlock(int num,int i,int j) //identify if the number is already present in the block
-{
-	_Bool existInBlock=0;
+	
+	//Checks Block
 	for(int row = 0; row < l; row++)
 	{
 		for(int col = 0; col < l; col++)
 		{
-			if(matrix[(i/l)*l+row][(j/l)*l+col] == num && (i != (l*(i/l) + row) && j != (l*(j/l) + col)))
+			if(matrix[(i/l)*l+row][(j/l)*l+col] == num ) 
 			{
-				existInBlock=1;
-				break;
+				return 1;
 			}
 		}
-		if(existInBlock)
-			break;
 	}
-	return existInBlock;
+	
+	//Cecks Row
+	for(int column=0;column<edge;column++)
+	{			
+		if(matrix[i][column]==num)
+		{
+			return 1;
+		}
+	}
+
+	//Checks Column
+	for(int row=0;row<edge;row++)
+	{
+	
+		if(matrix[row][j]==num)
+		{
+			return 1;
+		}
+	}
+	
+	return 0;
 }
