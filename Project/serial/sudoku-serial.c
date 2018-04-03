@@ -13,6 +13,7 @@ int canNbeHere();
 int **matrix;	
 int **auxMatrix;						
 int l=0,edge=0;
+int *firstZeros;
 
 // Main function
 int main(int argc, char *argv[])
@@ -24,7 +25,7 @@ int main(int argc, char *argv[])
 
 void readFile(char file[])
 {
-	
+	firstZeros=(int*) malloc(edge*sizeof(int *));
 	int value;
     FILE *input = fopen(file, "r"); // read only  
        
@@ -78,9 +79,25 @@ void printMatrix()
 	printf("----------------\n");
 }
 
+void findFirstZeros()
+{
+	int index=0;
+	for(int i=0;i<edge;i++)
+	{
+		for(int j=0;j<edge;j++)
+		{
+			if(auxMatrix[i][j]==0)
+			{
+				firstZeros[i] = j;
+				break;
+			}
+		}
+	}
+}
+
 void solveSudoku()
 {
-
+	findFirstZeros();
 	_Bool rollBack=1;
 	for(int i=0;i<edge;i++)
 	{
@@ -106,21 +123,56 @@ void solveSudoku()
 					{
 						rollBack=1;
 						matrix[i][j]=0;
-						do
+						_Bool escape=0;
+							
+				
+						if(firstZeros[i]==j&&i!=0)
 						{
-							j--;
-							if(j<0)
+							
+	
+							int previousJ=(j/l)* l+l;
+							int previousI=i-1;
+	
+							
+							while(!(previousJ==j&&previousI==i))
 							{
-								j=edge-1; i--;
+								j--;
+								if(j<0)
+								{
+									j=edge-1; i--;
+								}
+								if(auxMatrix[i][j]==0&&!(previousJ==j&&previousI==i))
+								{
+									matrix[i][j]=0;
+								}
 							}
-							if(i<0)
+							escape=1;
+							
+	
+						}
+						
+						//printMatrix();
+							
+						if(!escape)
+						{
+
+							do
 							{
-								printf("No solution\n");
-								exit(1);
-							}
-								
-						}	
-						while(auxMatrix[i][j]!=0);
+								j--;
+								if(j<0)
+								{
+									j=edge-1; i--;
+								}
+								if(i<0)
+								{
+									printf("No solution\n");
+									exit(0);
+								}
+									
+							}	
+							while(auxMatrix[i][j]!=0);
+						}
+						
 						
 					}
 				}

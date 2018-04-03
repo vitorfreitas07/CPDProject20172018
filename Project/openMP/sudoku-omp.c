@@ -119,6 +119,7 @@ void printMatrix(int k)
 
 void solveSudoku()
 {
+	#pragma pomp inst begin(solveSudoku)
 	_Bool end = 0;
 	_Bool rollBack=1;
 	
@@ -127,22 +128,22 @@ void solveSudoku()
 	{
 		int myId = omp_get_thread_num();
 		end = 0;
-		if(canNbeHere(firstI, firstJ, n, myId+1))
+		if(canNbeHere(firstI, firstJ, n, myId))
 		{
 			//printf("Thread %d can't solve with %d\n", myId,n);
 			continue;
 		}
 		matrix[firstI][firstJ][myId] = n;
 
-		for(int i=0;i<edge;i++) //to go through every row of the matrix
+		for(int i=0;i<edge&&end==0;i++) //to go through every row of the matrix
 		{
-			for(int j=0;j<edge;j++) //to go through every column of the matrix
+			for(int j=0;j<edge&&end==0;j++) //to go through every column of the matrix
 			{	
 				
 				if(auxMatrix[i][j]==0)  //if a given cell started with zero
 				{
 					rollBack=1;
-					while(rollBack==1)
+					while(rollBack==1&&end==0)
 					{
 						rollBack=0;
 						int try = matrix[i][j][myId];
@@ -170,11 +171,10 @@ void solveSudoku()
 								if(i == firstI && j == firstJ) 
 								{
 									end = 1;  //can't solve with this n
-									break;
 								}	
 									
 							}	
-							while(auxMatrix[i][j]!=0);
+							while(auxMatrix[i][j]!=0&&end==0);
 						}
 						else
 						{
@@ -187,19 +187,16 @@ void solveSudoku()
 								}
 							}
 						}
-						if(end)
-							break;
 					}
 				}
-				if(end)
-					break;
+
 			}
-			if(end)
-				break;
+
 		}	
 		//printf("Thread %d can't solve with %d\n", myId,n);
 	}
 	printf("No solution\n");
+	#pragma pomp inst end(solveSudoku)
 }
 
 
