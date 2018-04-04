@@ -97,6 +97,7 @@ void findFirstZeros()
 
 void solveSudoku()
 {
+
 	findFirstZeros();
 	_Bool rollBack=1;
 	for(int i=0;i<edge;i++)
@@ -121,6 +122,7 @@ void solveSudoku()
 
 					if(try>edge)
 					{
+							
 						rollBack=1;
 						matrix[i][j]=0;
 						_Bool escape=0;
@@ -141,11 +143,28 @@ void solveSudoku()
 								{
 									j=edge-1; i--;
 								}
+							
 								if(auxMatrix[i][j]==0&&!(previousJ==j&&previousI==i))
 								{
 									matrix[i][j]=0;
 								}
+								
 							}
+							
+							while(auxMatrix[i][j]!=0)
+							{
+								j--;
+								if(j<0)
+								{
+									j=edge-1; i--;
+								}
+								if(i<0)
+								{
+									printf("No solution\n");
+									exit(0);
+								}
+							}
+							
 							escape=1;
 							
 	
