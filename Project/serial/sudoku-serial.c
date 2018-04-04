@@ -132,9 +132,22 @@ void solveSudoku()
 						{
 							
 	
-							int previousJ=(j/l)* l+l;
+							int previousJ;//=(j/l)* l+l;
 							int previousI=i-1;
-	
+					
+							if((i-1)/3==i/3)
+							{
+								previousJ=(j/l)* l+l;
+								if(previousJ<firstZeros[previousI])
+									previousJ=firstZeros[previousI];
+							}		
+							else
+							{
+								previousJ=j;
+								if(previousJ<firstZeros[previousI])
+									previousJ=firstZeros[previousI];
+							}
+								
 							
 							while(!(previousJ==j&&previousI==i))
 							{
