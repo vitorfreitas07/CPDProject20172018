@@ -100,34 +100,50 @@ void solveSudoku()
 
 	findFirstZeros();
 	_Bool rollBack=1;
+	int rollBackVarJ=0;
+	int newBack=1;
 	for(int i=0;i<edge;i++)
 	{
+			
 		for(int j=0;j<edge;j++)
 		{	
-			if(auxMatrix[i][j]==0)
+	
+			if(matrix[i][j]==0)
 			{
 				rollBack=1;
 				while(rollBack==1)
 				{
 					rollBack=0;
+		
+			
+					
 					int try = matrix[i][j];
 					while(try<=edge)
 					{	
+						
+				
 						try++;
 						if(canNbeHere(i,j,try))
 							continue;
+						
 						matrix[i][j] = try;
 						break;
 					}
-
+					
+					
 					if(try>edge)
 					{
-							
+						if(newBack){
+							rollBackVarJ=j;
+							newBack=0;
+						}
+						
+						if(j==0)
+							newBack=1;
+						
 						rollBack=1;
 						matrix[i][j]=0;
-						_Bool escape=0;
 							
-				
 						if(firstZeros[i]==j&&i!=0)
 						{
 							
@@ -135,33 +151,28 @@ void solveSudoku()
 							int previousJ;//=(j/l)* l+l;
 							int previousI=i-1;
 					
-							if((i-1)/3==i/3)
-							{
-								previousJ=(j/l)* l+l;
+							/*if(previousI/l==i/l)
+							{*/
+								previousJ=(rollBackVarJ/l)* l+l-1;
 								if(previousJ<firstZeros[previousI])
 									previousJ=firstZeros[previousI];
-							}		
+							/*}									
 							else
 							{
-								previousJ=j;
+								previousJ=rollBackVarJ;
 								if(previousJ<firstZeros[previousI])
 									previousJ=firstZeros[previousI];
-							}
+							}*/
 								
-							
-							while(!(previousJ==j&&previousI==i))
-							{
-								j--;
-								if(j<0)
+							i=previousI;
+							j=previousJ;
+							while(previousJ<edge)
+							{	
+								previousJ++;
+								if(auxMatrix[i][previousJ]==0)
 								{
-									j=edge-1; i--;
-								}
-							
-								if(auxMatrix[i][j]==0&&!(previousJ==j&&previousI==i))
-								{
-									matrix[i][j]=0;
-								}
-								
+									matrix[i][previousJ]=0;
+								}	
 							}
 							
 							while(auxMatrix[i][j]!=0)
@@ -171,6 +182,7 @@ void solveSudoku()
 								{
 									j=edge-1; i--;
 								}
+										
 								if(i<0)
 								{
 									printf("No solution\n");
@@ -178,14 +190,9 @@ void solveSudoku()
 								}
 							}
 							
-							escape=1;
 							
-	
 						}
-						
-						//printMatrix();
-							
-						if(!escape)
+						else
 						{
 
 							do
